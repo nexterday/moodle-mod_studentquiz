@@ -152,5 +152,9 @@ $capabilities = array(
             'editingteacher' => CAP_ALLOW,
             'manager'        => CAP_ALLOW,
         ],
+    ],
+    'mod/studentquiz:systemnotifytaskdeleteorphanedquestions' => [
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_SYSTEM
     ]
 );
