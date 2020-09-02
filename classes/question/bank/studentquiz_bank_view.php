@@ -398,7 +398,7 @@ class studentquiz_bank_view extends \core_question\bank\view {
 
                 $continue = new \single_button($deleteurl, get_string('delete'), 'get');
 
-                $output = $OUTPUT->confirm(get_string('deletequestionscheck', 'question', $questionnames), $continue, $baseurl);
+                $output = $OUTPUT->confirm(get_string('deleteorphanedquestionscheck', 'question', $questionnames), $continue, $baseurl);
             } else if (optional_param('approveselected', false, PARAM_BOOL)) {
                 // Add an explanation about questions in use.
                 if ($inuse) {

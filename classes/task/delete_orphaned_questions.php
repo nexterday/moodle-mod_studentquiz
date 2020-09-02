@@ -41,7 +41,7 @@ class delete_orphaned_questions extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('scheduled_task_delete_questions', 'mod_studentquiz');
+        return get_string('deleteorphanedquestions', 'mod_studentquiz');
     }
 
     /**
@@ -52,24 +52,27 @@ class delete_orphaned_questions extends \core\task\scheduled_task {
     public function execute() {
         global $CFG, $DB, $USER;
 
-        if (get_config('studentquiz', 'deleteorphanedquestions') == true) {
+        if (get_config('studentquiz', 'deleteorphanedquestions') == true
+            && get_config('studentquiz', 'deleteorphanedtimelimit') == true) {
 
             require_once($CFG->libdir . '/questionlib.php');
             set_time_limit(0);
+
+            $timelimit = time() - abs(get_config('studentquiz', 'deleteorphanedtimelimit'));
 
             $questions = $DB->get_records_sql(
                     "SELECT *
                     FROM {studentquiz_question} sq
                     JOIN {question} q ON sq.questionid = q.id
-                    WHERE sq.state = 0 OR q.hidden = 1
-                    ORDER BY sq.questionid ASC", array());
-
-            $output = "";
+                    WHERE (sq.state = 0 OR q.hidden = 1) AND :timelimit - q.timemodified > 0
+                    ORDER BY sq.questionid ASC", array('timelimit' => $timelimit));
 
             // Process questionids and generate output.
+            $output = "";
+
             if (count($questions) == 0) {
 
-                $output .=  get_string('scheduled_task_delete_questions_none_found', 'mod_studentquiz');
+                $output .=  get_string('deleteorphanedquestionsnonefound', 'mod_studentquiz');
 
             } else {
 
@@ -83,7 +86,7 @@ class delete_orphaned_questions extends \core\task\scheduled_task {
                             'questionid' => format_string($question->questionid),
                         ];
 
-                        $output .= get_string('scheduled_task_delete_questions_questioninfo', 'mod_studentquiz', $a);
+                        $output .= get_string('deleteorphanedquestionsquestioninfo', 'mod_studentquiz', $a);
 
                         // Delete from question table.
                         question_delete_question($question->questionid);
@@ -113,15 +116,15 @@ class delete_orphaned_questions extends \core\task\scheduled_task {
                             $success = $success && $DB->delete_records('studentquiz_rate',
                                                     array('questionid' => $question->questionid));
 
-                             $output .= get_string('scheduled_task_delete_questions_success_mdlquestion', 'mod_studentquiz');
+                             $output .= get_string('deleteorphanedquestionssuccessmdlquestion', 'mod_studentquiz');
 
                             if ($success) {
-                                $output .= get_string('scheduled_task_delete_questions_success_studentquiz', 'mod_studentquiz');
+                                $output .= get_string('deleteorphanedquestionssuccessstudentquiz', 'mod_studentquiz');
                             } else {
-                                $output .= get_string('scheduled_task_delete_questions_error_studentquiz', 'mod_studentquiz');
+                                $output .= get_string('deleteorphanedquestionserrorstudentquiz', 'mod_studentquiz');
                             }
                         } else {
-                            $output .= get_string('scheduled_task_delete_questions_error_mdlquestion', 'mod_studentquiz');
+                            $output .= get_string('deleteorphanedquestionserrormdlquestion', 'mod_studentquiz');
                         }
                     }
                 }
@@ -135,12 +138,12 @@ class delete_orphaned_questions extends \core\task\scheduled_task {
             $message->userfrom = \core_user::get_noreply_user();
             $message->userto = $USER;
             $message->notification = 1;
-            $message->subject = get_string('scheduled_task_delete_questions_subject', 'mod_studentquiz');
+            $message->subject = get_string('deleteorphanedquestionssubject', 'mod_studentquiz');
             $message->fullmessage = $output;
             $message->fullmessageformat = FORMAT_MOODLE;
-            $message->fullmessagehtml = get_string('scheduled_task_delete_questions_fullmessage', 'mod_studentquiz',
+            $message->fullmessagehtml = get_string('deleteorphanedquestionsfullmessage', 'mod_studentquiz',
                                                     ['fullmessage' => $output]) . PHP_EOL;
-            $message->smallmessage = get_string('scheduled_task_delete_questions_smallmessage', 'mod_studentquiz');
+            $message->smallmessage = get_string('deleteorphanedquestionssmallmessage', 'mod_studentquiz');
             $message->contexturl = new \moodle_url("/admin/tool/task/scheduledtasks.php");
             $message->contexturlname = get_string('scheduledtasks', 'tool_task');
 

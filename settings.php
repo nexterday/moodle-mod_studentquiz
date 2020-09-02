@@ -141,8 +141,21 @@ if ($ADMIN->fulltree) {
     ));
 
     $settings->add(new admin_setting_configcheckbox('studentquiz/deleteorphanedquestions',
-        get_string('settings_deleteorphaned', 'studentquiz'),
-        get_string('settings_deleteorphaned_help', 'studentquiz'),
+        get_string('settingsdeleteorphaned', 'studentquiz'),
+        get_string('settingsdeleteorphaned_help', 'studentquiz'),
         '0'
+    ));
+
+    $choices = [
+        '15768000' => '6 months',
+        '31536000' => '1 year',
+        '63072000' => '2 years',
+        '94608000' => '3 years'];
+
+    $settings->add(new admin_setting_configselect('studentquiz/deleteorphanedtimelimit',
+            get_string('settingsdeleteorphanedtimelimit', 'studentquiz'),
+            get_string('settingsdeleteorphanedtimelimit_help', 'studentquiz'),
+            '31536000',
+            $choices
     ));
 }
