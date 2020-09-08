@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
  * A scheduled task for sending digest notification.
  *
  * @package    mod_studentquiz
- * @copyright  2020 Huong Nguyen <huongnv13@gmail.com>
+ * @copyright  2020 ETH zurich
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class delete_orphaned_questions extends \core\task\scheduled_task {
@@ -51,14 +51,18 @@ class delete_orphaned_questions extends \core\task\scheduled_task {
      */
     public function execute() {
         global $CFG, $DB, $USER;
-
-        if (get_config('studentquiz', 'deleteorphanedquestions') == true
-            && get_config('studentquiz', 'deleteorphanedtimelimit') == true) {
+        
+        $alloworphandelete = get_config('studentquiz', 'deleteorphanedquestions');
+        $deleteperiod = get_config('studentquiz', 'deleteorphanedquestions');
+        if (!empty($alloworphandelete) && $alloworphandelete == 1 && 
+            && !empty($deleteperiod)) {
 
             require_once($CFG->libdir . '/questionlib.php');
-            set_time_limit(0);
+            // Raise time and memory, as the process can be quite intensive.
+            core_php_time_limit::raise();
+            raise_memory_limit(MEMORY_EXTRA);
 
-            $timelimit = time() - abs(get_config('studentquiz', 'deleteorphanedtimelimit'));
+            $timelimit = time() - abs($deleteperiod);
 
             $questions = $DB->get_records_sql(
                     "SELECT *
@@ -68,7 +72,7 @@ class delete_orphaned_questions extends \core\task\scheduled_task {
                     ORDER BY sq.questionid ASC", array('timelimit' => $timelimit));
 
             // Process questionids and generate output.
-            $output = "";
+            $output = '';
 
             if (count($questions) == 0) {
 
@@ -144,7 +148,7 @@ class delete_orphaned_questions extends \core\task\scheduled_task {
             $message->fullmessagehtml = get_string('deleteorphanedquestionsfullmessage', 'mod_studentquiz',
                                                     ['fullmessage' => $output]) . PHP_EOL;
             $message->smallmessage = get_string('deleteorphanedquestionssmallmessage', 'mod_studentquiz');
-            $message->contexturl = new \moodle_url("/admin/tool/task/scheduledtasks.php");
+            $message->contexturl = new \moodle_url('/admin/tool/task/scheduledtasks.php');
             $message->contexturlname = get_string('scheduledtasks', 'tool_task');
 
             message_send($message);
