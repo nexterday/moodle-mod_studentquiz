@@ -47,7 +47,8 @@ $context = $report->get_context();
 $cm = $report->get_coursemodule();
 $studentquiz = mod_studentquiz_load_studentquiz($cmid, $context->id);
 
-if ($CFG->branch < 37) { // Since Moodle 37 setting the question data is handled by event question_created.
+// Since Moodle 37 setting the question data is handled by event question_created.
+if ($CFG->branch < 37) {
     mod_studentquiz_compare_questions_data($studentquiz);
 }
 
